@@ -34,7 +34,7 @@
 ```
 npm install
 
-gulp
+gulp(gulp watch)
 
 ```
 
