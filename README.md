@@ -34,7 +34,7 @@
 ```
 npm install
 
-gult
+gulp
 
 ```
 
