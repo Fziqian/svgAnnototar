@@ -10,7 +10,7 @@ export namespace Label {
             private readonly categoryId: number,
             public readonly startIndex: number,
             public readonly endIndex: number,
-            private readonly root: Store,
+            public readonly root: Store,
             public readonly attributes: any = {}
         ) {
         }

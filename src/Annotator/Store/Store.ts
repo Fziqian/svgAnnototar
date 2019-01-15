@@ -17,6 +17,7 @@ export class Store implements RepositoryRoot {
     config: {
         maxLineWidth: number
         allowMultipleLabel: boolean
+        showLabelOnTop:boolean
     };
     readonly ready$: Observable<void>;
     private readonly eventEmitter = new EventEmitter();
@@ -29,7 +30,8 @@ export class Store implements RepositoryRoot {
         this.connectionRepo = new Connection.Repository(this);
         this.config =  {
             maxLineWidth: 80,
-            allowMultipleLabel: true
+            allowMultipleLabel: true,
+            showLabelOnTop:false
         };
         this.ready$ = fromEvent(this.eventEmitter, 'ready');
         this.labelRepo.readyToCreate$.subscribe(it => {

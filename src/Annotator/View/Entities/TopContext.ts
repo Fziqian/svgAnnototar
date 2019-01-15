@@ -37,6 +37,7 @@ export class TopContext {
                 this.elements.add(newConnectionView);
             }
         }
+        //---------------订阅label创建------------
         this.labelCreatedSubscription = this.attachTo.root.store.labelRepo.created$.pipe(
             filter(it => this.attachTo.store.isLabelInThisLine(it))
         ).subscribe(it => {
@@ -47,6 +48,7 @@ export class TopContext {
             }
             this.addElement(theLabelView);
         });
+        //----------------订阅connection创建------------
         this.connectionCreatedSubscription = this.attachTo.root.store.connectionRepo.created$.pipe(
             filter(it => this.attachTo.store.isConnectionInThisLine(it))
         ).subscribe(it => {
@@ -57,6 +59,7 @@ export class TopContext {
             }
             this.addElement(theConnectionView);
         });
+        //----------------订阅label删除------------------
         this.labelDeletedSubscription = this.attachTo.root.store.labelRepo.deleted$.pipe(
             filter(it => this.attachTo.store.isLabelInThisLine(it))
         ).subscribe(it => {
@@ -74,6 +77,7 @@ export class TopContext {
                 this.attachTo.layoutAfterSelf(this.height - originHeight);
             }
         });
+        //---------------------订阅connection删除--------------------
         this.connectionDeletedSubscription = this.attachTo.root.store.connectionRepo.deleted$.pipe(
             filter(it => this.attachTo.store.isConnectionInThisLine(it))
         ).subscribe(it => {
@@ -86,9 +90,11 @@ export class TopContext {
                 }
             }
             if (this.height !== originHeight) {
-                this.attachTo.layout();
-                this.layout(this.height - originHeight);
-                this.attachTo.layoutAfterSelf(this.height - originHeight);
+                // this.attachTo.layout(); //当前行文本重新布局
+                // this.layout(this.height - originHeight);//当前行的上部区域重新布局
+                // //当前行的上部区域重新布局后重新绘制
+                this.attachTo.Test();
+                this.attachTo.layoutAfterSelf(this.height - originHeight); 
             }
         });
     }
@@ -110,7 +116,8 @@ export class TopContext {
 
     get height() {
         for (let element of this.elements) {
-            if (element instanceof LabelView.Entity)
+            // 如果是配置了不显示label的情况下，在计算是否重叠时将忽略label层，因为他直接标记覆盖在原文本内容上
+            if (element instanceof LabelView.Entity /* && element.store.root.config.showLabelOnTop */)
                 element.eliminateOverlapping();
         }
         for (let element of this.elements) {

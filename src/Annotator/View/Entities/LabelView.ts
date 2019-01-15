@@ -22,7 +22,7 @@ export namespace LabelView {
                     public readonly store: Label.Entity,
                     public readonly context: TopContext) {
             super();
-            this.layer = 1;
+            this.layer = this.store.root.config.showLabelOnTop?1:0;
         }
 
         get x() {
@@ -68,7 +68,7 @@ export namespace LabelView {
                     x: textX,
                     width: this.textWidth
                 },
-                container: {
+                container: !this.store.root.config.showLabelOnTop ? this.highlightElementBox : {
                     x: textX - TEXT_CONTAINER_PADDING,
                     y: highlightElementBox.y,
                     width: this.textWidth + 2 * TEXT_CONTAINER_PADDING
@@ -119,7 +119,11 @@ export namespace LabelView {
         preRender() {
             this.svgElement = this.context.svgElement.group();
             this.annotationElement = this.svgElement.group().back();
-            this.textElement = this.annotationElement.text(this.category.text).font({size: TEXT_SIZE});
+            if(this.store.root.config.showLabelOnTop){
+                this.textElement = this.annotationElement.text(this.category.text).font({size: TEXT_SIZE});
+            }else{
+                this.textElement = this.annotationElement.text("").font({size: 0});
+            }
             // to deceive svg.js not to call bbox when call x() and y()
             // bad for svg.js
             this.svgElement.attr('x', "");
@@ -139,7 +143,9 @@ export namespace LabelView {
 
         render() {
             this.renderHighlight();
-            this.renderAnnotation();
+            if(this.store.root.config.showLabelOnTop){
+                this.renderAnnotation();
+            }
         }
 
         private renderHighlight() {
@@ -151,6 +157,21 @@ export namespace LabelView {
             }).dx(box.x);
             if(this.store.attributes.isEq!=undefined && !this.store.attributes.isEq){
                 this.highLightElement.addClass('notEq-highLight');
+            }
+            if(!this.store.root.config.showLabelOnTop){
+                this.highLightElement.style({cursor: 'pointer'});
+                this.highLightElement.on('click', (e) => {
+                    this.context.attachTo.root.root.emit('labelClicked', this.id);
+                    e.preventDefault();
+                });
+                this.highLightElement.on('dblclick', (e) => {
+                    this.context.attachTo.root.root.emit('labelDblClicked', this.id);
+                    e.preventDefault();
+                });
+                this.highLightElement.on('contextmenu', (e) => {
+                    this.context.attachTo.root.root.emit('labelRightClicked', this.id, e.clientX, e.clientY);
+                    e.preventDefault();
+                });
             }
         }
 

@@ -13,10 +13,7 @@ export namespace LineView {
         y: number;
         topContext: TopContext = null;
 
-        constructor(
-            public readonly id: number,
-            public store: Line.Entity,
-            public readonly root: View) {
+        constructor(public readonly id: number,public store: Line.Entity,public readonly root: View) {
             this.xCoordinateOfChar = [];
             this.topContext = new TopContext(this);
             root.store.lineRepo.updated$.pipe(filter(it => it === this.id)).subscribe(() => {

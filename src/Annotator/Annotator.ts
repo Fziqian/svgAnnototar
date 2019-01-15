@@ -26,6 +26,9 @@ export class Annotator extends EventEmitter {
             if (config.allowMultipleLabel !== undefined) {
                 this.store.config.allowMultipleLabel = config.allowMultipleLabel;
             }
+            if (config.showLabelOnTop !== undefined){
+                this.store.config.showLabelOnTop = config.showLabelOnTop;
+            }
         }
         this.view = new View(htmlElement, this);
         this.dispatcher = new Dispatcher(this.store);

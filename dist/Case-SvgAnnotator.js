@@ -16645,7 +16645,6 @@ var Action;
         Connection.Update = Update;
     })(Connection = Action.Connection || (Action.Connection = {}));
 })(Action = exports.Action || (exports.Action = {}));
-
 },{}],204:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -16684,6 +16683,9 @@ var Annotator = /** @class */ (function (_super) {
             if (config_1.allowMultipleLabel !== undefined) {
                 _this.store.config.allowMultipleLabel = config_1.allowMultipleLabel;
             }
+            if (config_1.showLabelOnTop !== undefined) {
+                _this.store.config.showLabelOnTop = config_1.showLabelOnTop;
+            }
         }
         _this.view = new View_1.View(htmlElement, _this);
         _this.dispatcher = new Dispatcher_1.Dispatcher(_this.store);
@@ -16714,7 +16716,6 @@ var Annotator = /** @class */ (function (_super) {
     return Annotator;
 }(events_1.EventEmitter));
 exports.Annotator = Annotator;
-
 },{"./Dispatcher/Dispatcher":205,"./Store/Store":213,"./View/EventHandler/TextSelectionHandler":219,"./View/EventHandler/TwoLabelsClickedHandler":220,"./View/View":221,"events":1}],205:[function(require,module,exports){
 "use strict";
 var __values = (this && this.__values) || function (o) {
@@ -16811,7 +16812,6 @@ var Dispatcher = /** @class */ (function () {
     return Dispatcher;
 }());
 exports.Dispatcher = Dispatcher;
-
 },{"../Action/Action":203,"../Store/Entities/Connection":208,"../Store/Entities/Label":210}],206:[function(require,module,exports){
 (function (process){
 "use strict";
@@ -16824,8 +16824,8 @@ function assert(condition, message) {
     }
 }
 exports.assert = assert;
-
 }).call(this,require('_process'))
+
 },{"_process":2}],207:[function(require,module,exports){
 "use strict";
 var __values = (this && this.__values) || function (o) {
@@ -16962,7 +16962,6 @@ var Base;
     }());
     Base.Repository = Repository;
 })(Base = exports.Base || (exports.Base = {}));
-
 },{"./Assert":206,"events":1,"rxjs":3}],208:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -17067,7 +17066,6 @@ var Connection;
     }
     Connection.constructAll = constructAll;
 })(Connection = exports.Connection || (exports.Connection = {}));
-
 },{"../../Infrastructure/Repository":207}],209:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -17116,7 +17114,6 @@ var ConnectionCategory;
     }
     ConnectionCategory.constructAll = constructAll;
 })(ConnectionCategory = exports.ConnectionCategory || (exports.ConnectionCategory = {}));
-
 },{"../../Infrastructure/Repository":207}],210:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -17309,7 +17306,6 @@ var Label;
     }
     Label.constructAll = constructAll;
 })(Label = exports.Label || (exports.Label = {}));
-
 },{"../../Infrastructure/Repository":207,"rxjs":3}],211:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -17370,7 +17366,6 @@ var LabelCategory;
     }
     LabelCategory.constructAll = constructAll;
 })(LabelCategory = exports.LabelCategory || (exports.LabelCategory = {}));
-
 },{"../../Infrastructure/Repository":207}],212:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -17478,7 +17473,6 @@ var Line;
     }
     Line.construct = construct;
 })(Line = exports.Line || (exports.Line = {}));
-
 },{"../../Infrastructure/Assert":206,"../../Infrastructure/Repository":207}],213:[function(require,module,exports){
 "use strict";
 var __values = (this && this.__values) || function (o) {
@@ -17526,7 +17520,8 @@ var Store = /** @class */ (function () {
         this.connectionRepo = new Connection_1.Connection.Repository(this);
         this.config = {
             maxLineWidth: 80,
-            allowMultipleLabel: true
+            allowMultipleLabel: true,
+            showLabelOnTop: false
         };
         this.ready$ = rxjs_1.fromEvent(this.eventEmitter, 'ready');
         this.labelRepo.readyToCreate$.subscribe(function (it) {
@@ -17700,7 +17695,6 @@ var Store = /** @class */ (function () {
     return Store;
 }());
 exports.Store = Store;
-
 },{"./Entities/Connection":208,"./Entities/ConnectionCategory":209,"./Entities/Label":210,"./Entities/LabelCategory":211,"./Entities/Line":212,"events":1,"rxjs":3}],214:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -17930,7 +17924,6 @@ var ConnectionView;
     }(Repository_1.Base.Repository));
     ConnectionView.Repository = Repository;
 })(ConnectionView = exports.ConnectionView || (exports.ConnectionView = {}));
-
 },{"../../Infrastructure/Assert":206,"../../Infrastructure/Repository":207,"./TopContextUser":218,"rxjs/operators":201}],215:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -17963,7 +17956,7 @@ var LabelView;
             _this.svgElement = null;
             _this.textElement = null;
             _this.textWidth = null;
-            _this.layer = 1;
+            _this.layer = _this.store.root.config.showLabelOnTop ? 1 : 0;
             return _this;
         }
         Object.defineProperty(Entity.prototype, "x", {
@@ -18025,7 +18018,7 @@ var LabelView;
                         x: textX,
                         width: this.textWidth
                     },
-                    container: {
+                    container: !this.store.root.config.showLabelOnTop ? this.highlightElementBox : {
                         x: textX - TEXT_CONTAINER_PADDING,
                         y: highlightElementBox.y,
                         width: this.textWidth + 2 * TEXT_CONTAINER_PADDING
@@ -18079,7 +18072,12 @@ var LabelView;
         Entity.prototype.preRender = function () {
             this.svgElement = this.context.svgElement.group();
             this.annotationElement = this.svgElement.group().back();
-            this.textElement = this.annotationElement.text(this.category.text).font({ size: TEXT_SIZE });
+            if (this.store.root.config.showLabelOnTop) {
+                this.textElement = this.annotationElement.text(this.category.text).font({ size: TEXT_SIZE });
+            }
+            else {
+                this.textElement = this.annotationElement.text("").font({ size: 0 });
+            }
             // to deceive svg.js not to call bbox when call x() and y()
             // bad for svg.js
             this.svgElement.attr('x', "");
@@ -18097,9 +18095,12 @@ var LabelView;
         };
         Entity.prototype.render = function () {
             this.renderHighlight();
-            this.renderAnnotation();
+            if (this.store.root.config.showLabelOnTop) {
+                this.renderAnnotation();
+            }
         };
         Entity.prototype.renderHighlight = function () {
+            var _this = this;
             var box = this.highlightElementBox;
             this.highLightElement = this.svgElement.rect(box.width, box.height);
             this.highLightElement.fill({
@@ -18108,6 +18109,21 @@ var LabelView;
             }).dx(box.x);
             if (this.store.attributes.isEq != undefined && !this.store.attributes.isEq) {
                 this.highLightElement.addClass('notEq-highLight');
+            }
+            if (!this.store.root.config.showLabelOnTop) {
+                this.highLightElement.style({ cursor: 'pointer' });
+                this.highLightElement.on('click', function (e) {
+                    _this.context.attachTo.root.root.emit('labelClicked', _this.id);
+                    e.preventDefault();
+                });
+                this.highLightElement.on('dblclick', function (e) {
+                    _this.context.attachTo.root.root.emit('labelDblClicked', _this.id);
+                    e.preventDefault();
+                });
+                this.highLightElement.on('contextmenu', function (e) {
+                    _this.context.attachTo.root.root.emit('labelRightClicked', _this.id, e.clientX, e.clientY);
+                    e.preventDefault();
+                });
             }
         };
         Entity.prototype.renderAnnotation = function () {
@@ -18169,7 +18185,6 @@ var LabelView;
     }(Repository_1.Base.Repository));
     LabelView.Repository = Repository;
 })(LabelView = exports.LabelView || (exports.LabelView = {}));
-
 },{"../../Infrastructure/Repository":207,"./TopContextUser":218}],216:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
@@ -18420,7 +18435,6 @@ var LineView;
     }
     LineView.constructAll = constructAll;
 })(LineView = exports.LineView || (exports.LineView = {}));
-
 },{"../../Infrastructure/Repository":207,"./TopContext":217,"rxjs":3,"rxjs/operators":201}],217:[function(require,module,exports){
 "use strict";
 var __values = (this && this.__values) || function (o) {
@@ -18483,6 +18497,7 @@ var TopContext = /** @class */ (function () {
             }
             finally { if (e_1) throw e_1.error; }
         }
+        //---------------订阅label创建------------
         this.labelCreatedSubscription = this.attachTo.root.store.labelRepo.created$.pipe(operators_1.filter(function (it) { return _this.attachTo.store.isLabelInThisLine(it); })).subscribe(function (it) {
             var theLabel = _this.attachTo.root.store.labelRepo.get(it);
             var theLabelView = new LabelView_1.LabelView.Entity(theLabel.id, theLabel, _this);
@@ -18491,6 +18506,7 @@ var TopContext = /** @class */ (function () {
             }
             _this.addElement(theLabelView);
         });
+        //----------------订阅connection创建------------
         this.connectionCreatedSubscription = this.attachTo.root.store.connectionRepo.created$.pipe(operators_1.filter(function (it) { return _this.attachTo.store.isConnectionInThisLine(it); })).subscribe(function (it) {
             var theConnection = _this.attachTo.root.store.connectionRepo.get(it);
             var theConnectionView = new ConnectionView_1.ConnectionView.Entity(theConnection.id, theConnection, _this);
@@ -18499,6 +18515,7 @@ var TopContext = /** @class */ (function () {
             }
             _this.addElement(theConnectionView);
         });
+        //----------------订阅label删除------------------
         this.labelDeletedSubscription = this.attachTo.root.store.labelRepo.deleted$.pipe(operators_1.filter(function (it) { return _this.attachTo.store.isLabelInThisLine(it); })).subscribe(function (it) {
             var e_3, _a;
             _this.attachTo.root.labelViewRepo.delete(it.id);
@@ -18525,6 +18542,7 @@ var TopContext = /** @class */ (function () {
                 _this.attachTo.layoutAfterSelf(_this.height - originHeight);
             }
         });
+        //---------------------订阅connection删除--------------------
         this.connectionDeletedSubscription = this.attachTo.root.store.connectionRepo.deleted$.pipe(operators_1.filter(function (it) { return _this.attachTo.store.isConnectionInThisLine(it); })).subscribe(function (it) {
             var e_4, _a;
             _this.attachTo.root.connectionViewRepo.delete(it.id);
@@ -18546,8 +18564,10 @@ var TopContext = /** @class */ (function () {
                 finally { if (e_4) throw e_4.error; }
             }
             if (_this.height !== originHeight) {
-                _this.attachTo.layout();
-                _this.layout(_this.height - originHeight);
+                // this.attachTo.layout(); //当前行文本重新布局
+                // this.layout(this.height - originHeight);//当前行的上部区域重新布局
+                // //当前行的上部区域重新布局后重新绘制
+                _this.attachTo.Test();
                 _this.attachTo.layoutAfterSelf(_this.height - originHeight);
             }
         });
@@ -18573,7 +18593,8 @@ var TopContext = /** @class */ (function () {
             try {
                 for (var _d = __values(this.elements), _e = _d.next(); !_e.done; _e = _d.next()) {
                     var element = _e.value;
-                    if (element instanceof LabelView_1.LabelView.Entity)
+                    // 如果是配置了不显示label的情况下，在计算是否重叠时将忽略label层，因为他直接标记覆盖在原文本内容上
+                    if (element instanceof LabelView_1.LabelView.Entity /* && element.store.root.config.showLabelOnTop */)
                         element.eliminateOverlapping();
                 }
             }
@@ -18691,7 +18712,6 @@ var TopContext = /** @class */ (function () {
     return TopContext;
 }());
 exports.TopContext = TopContext;
-
 },{"../../Infrastructure/Assert":206,"./ConnectionView":214,"./LabelView":215,"events":1,"rxjs":3,"rxjs/operators":201}],218:[function(require,module,exports){
 "use strict";
 var __values = (this && this.__values) || function (o) {
@@ -18705,6 +18725,7 @@ var __values = (this && this.__values) || function (o) {
     };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+var LabelView_1 = require("./LabelView");
 var TopContextUser = /** @class */ (function () {
     function TopContextUser() {
     }
@@ -18719,6 +18740,9 @@ var TopContextUser = /** @class */ (function () {
     Object.defineProperty(TopContextUser.prototype, "overlapping", {
         get: function () {
             var e_1, _a, e_2, _b;
+            if (this instanceof LabelView_1.LabelView.Entity && !this.store.root.config.showLabelOnTop) {
+                return false;
+            }
             var allElementsInThisLayer = new Set();
             try {
                 for (var _c = __values(this.context.elements), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -18775,8 +18799,7 @@ var TopContextUser = /** @class */ (function () {
     return TopContextUser;
 }());
 exports.TopContextUser = TopContextUser;
-
-},{}],219:[function(require,module,exports){
+},{"./LabelView":215}],219:[function(require,module,exports){
 "use strict";
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -18876,7 +18899,6 @@ var TextSelectionHandler = /** @class */ (function () {
     return TextSelectionHandler;
 }());
 exports.TextSelectionHandler = TextSelectionHandler;
-
 },{}],220:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -18938,7 +18960,6 @@ var TwoLabelsClickedHandler = /** @class */ (function () {
     return TwoLabelsClickedHandler;
 }());
 exports.TwoLabelsClickedHandler = TwoLabelsClickedHandler;
-
 },{}],221:[function(require,module,exports){
 "use strict";
 var __values = (this && this.__values) || function (o) {
@@ -18979,7 +19000,7 @@ var View = /** @class */ (function () {
         this.svgDoc = SVG(htmlElement);
         this.svgDoc.width(1024).height(768);
         this.svgDoc.view = this;
-        this.svgDoc.style({ 'padding-left': '20px', 'padding-right': '20px' });
+        this.svgDoc.style({ 'padding-left': '30px', 'padding-right': '0px' });
         this.lineViewRepo = new LineView_1.LineView.Repository(this);
         this.labelViewRepo = new LabelView_1.LabelView.Repository(this);
         this.connectionViewRepo = new ConnectionView_1.ConnectionView.Repository(this);
@@ -19160,7 +19181,6 @@ var View = /** @class */ (function () {
     return View;
 }());
 exports.View = View;
-
 },{"./Entities/ConnectionView":214,"./Entities/LabelView":215,"./Entities/LineView":216,"svg.js":202}],222:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -19170,7 +19190,6 @@ function cusAssert(condition, message) {
     }
 }
 exports.cusAssert = cusAssert;
-
 },{}],223:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -19504,7 +19523,6 @@ var SvgAnnotator = /** @class */ (function () {
     return SvgAnnotator;
 }());
 exports.SvgAnnotator = SvgAnnotator;
-
 },{"../Annotator/Action/Action":203,"../Annotator/Annotator":204,"../SvgAnnotator/CusAssert":222,"../SvgAnnotator/SvgAnnotatorOptions":224}],224:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -19574,7 +19592,6 @@ var SvgAnnotatorDefaultOptions = /** @class */ (function () {
     return SvgAnnotatorDefaultOptions;
 }());
 exports.SvgAnnotatorDefaultOptions = SvgAnnotatorDefaultOptions;
-
 },{}],225:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -19583,22 +19600,15 @@ var SvgAnnotator_1 = require("./SvgAnnotator/SvgAnnotator");
 (function ($) {
     $.extend({
         SvgAnnotator: function (htmlElement, data, options) {
-            var a = 1;
-            for (var i = 0; i < 3; i++) {
-                a++;
-            }
-            console.log(a);
             return new SvgAnnotator_1.SvgAnnotator(htmlElement, data, options);
         }
     });
 })(jQuery);
-console.log('ooooooooo');
 /*
 interface JQuery{
   SvgAnnotator(options ?: SvgAnnotatorOptions) : any;
 }
 */ 
-
-},{"./SvgAnnotator/SvgAnnotator":223}]},{},[225]);
+},{"./SvgAnnotator/SvgAnnotator":223}]},{},[225])
 
 //# sourceMappingURL=Case-SvgAnnotator.js.map

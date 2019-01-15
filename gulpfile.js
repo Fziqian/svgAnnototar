@@ -33,6 +33,25 @@ gulp.task("bundle-jquery-annotator", function () {
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest("dist"));
 });
+gulp.task("bundle", function () {
+    return browserify({
+            basedir: '.',
+            debug: true,
+            entries: ['src/main.ts'],
+            cache: {},
+            packageCache: {}
+        })
+        .plugin(tsify)
+        .bundle()
+        .pipe(source('bundle.js'))
+        .pipe(buffer())
+        .pipe(sourcemaps.init({
+            loadMaps: true
+        }))
+        .pipe(uglify())
+        .pipe(sourcemaps.write('./'))
+        .pipe(gulp.dest("dist"));
+});
 
 gulp.task("default", ["copy-html", "bundle-jquery-annotator"], function () {
     return browserify({

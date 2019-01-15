@@ -1,5 +1,6 @@
 import * as SVG from "svg.js";
 import { TopContext } from "./TopContext";
+import { LabelView } from "./LabelView";
 
 export abstract class TopContextUser {
     layer: number;
@@ -23,6 +24,9 @@ export abstract class TopContextUser {
     abstract initPosition()
 
     private get overlapping() {
+        if(this instanceof LabelView.Entity && !this.store.root.config.showLabelOnTop){
+            return false;
+        }
 
         let allElementsInThisLayer = new Set();
         for (let ele of this.context.elements) {

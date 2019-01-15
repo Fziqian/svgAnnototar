@@ -8,7 +8,7 @@ export namespace Connection {
             private readonly categoryId: number,
             private readonly fromId: number,
             private readonly toId: number,
-            private readonly root: Store
+            public readonly root: Store
         ) {
         }
 
