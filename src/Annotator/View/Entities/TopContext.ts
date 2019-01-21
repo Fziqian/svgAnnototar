@@ -26,6 +26,7 @@ export class TopContext {
 
     constructor(public readonly attachTo: LineView.Entity) {
         this.elements = new Set<TopContextUser>();
+        // -----------------订阅行上部区域位置发生改变------------------
         this.positionChanged$ = fromEvent(this.eventEmitter, 'positionChanged');
         for (let label of this.attachTo.store.labelsInThisLine) {
             let newLabelView = new LabelView.Entity(label.id, label, this);
@@ -90,10 +91,11 @@ export class TopContext {
                 }
             }
             if (this.height !== originHeight) {
-                // this.attachTo.layout(); //当前行文本重新布局
-                // this.layout(this.height - originHeight);//当前行的上部区域重新布局
+                this.attachTo.layout(); //当前行文本重新布局
+                this.layout(this.height - originHeight);//当前行的上部区域重新布局
                 // //当前行的上部区域重新布局后重新绘制
-                this.attachTo.Test();
+                // this.attachTo.Test();
+                this.attachTo.rerender();
                 this.attachTo.layoutAfterSelf(this.height - originHeight); 
             }
         });
@@ -138,7 +140,7 @@ export class TopContext {
             if (this.attachTo.isFirst) {
                 this.y = (this.attachTo.svgElement.node as any as SVGTSpanElement).getExtentOfChar(0).y;
             } else {
-                this.y = this.attachTo.prev.topContext.y + 20.8 + this.height;
+                this.y = this.attachTo.prev.topContext.y + 23.8 + this.height;
             }
         } else {
             this.y += dy;
@@ -150,7 +152,7 @@ export class TopContext {
     }
 
     preRender(context: SVG.Doc) {
-        this.svgElement = context.group().back();
+        this.svgElement = context.group();
         this.elements.forEach(it => it.preRender());
     }
 
@@ -186,8 +188,11 @@ export class TopContext {
         element.render();
         element.postRender();
         if (originHeight !== this.height) {
+            // 当前行重新布局
             this.attachTo.layout();
+            // 当前行 的上部区域 重新布局
             this.layout(this.height - originHeight);
+            // 当前行后面的所有行 的上部区域 重新布局
             this.attachTo.layoutAfterSelf(this.height - originHeight);
         }
     }

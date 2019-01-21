@@ -10,11 +10,12 @@ export abstract class TopContextUser {
     abstract readonly x: number;
 
     abstract readonly width: number;
+    abstract readonly outterWidth: number;
     svgElement: SVG.Element;
 
     // 左下角在render context中的坐标
     get y() {
-        return -(this.layer - 1) * 30 - 20.8;
+        return -(this.layer - 1) * 30 - 23.8;
     }
 
     abstract render()
@@ -35,11 +36,11 @@ export abstract class TopContextUser {
             }
         }
         let thisLeftX = this.x;
-        let width = this.width;
+        let width = this.outterWidth;
         for (let other of allElementsInThisLayer) {
             let thisRightX = thisLeftX + width;
             let otherLeftX = other.x;
-            let otherWidth = other.width;
+            let otherWidth = other.outterWidth;
             let otherRightX = otherLeftX + otherWidth;
 
             //判断是否有重叠

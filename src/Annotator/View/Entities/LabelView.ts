@@ -32,17 +32,23 @@ export namespace LabelView {
         get globalX(): number {
             //return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).x + this.annotationElementBox.container.width / 2;
             // 获取left属性，避免部分浏览器中没有x属性
-            return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).left + this.annotationElementBox.container.width / 2;
+            let temp=this.store.root.config.showLabelOnTop?this.annotationElement.children()[0]:this.highLightElement;//判断以highLightElement还是annotationElement为参考点
+            return (temp.node.getBoundingClientRect() as DOMRect).left + this.annotationElementBox.container.width / 2;
         }
 
         get globalY(): number {
             //return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).y + this.textElement.node.clientHeight / 2;
             // 获取top属性，避免部分浏览器中没有y属性
-            return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).top + this.textElement.node.clientHeight / 2;
+            let temp=this.store.root.config.showLabelOnTop?this.annotationElement.children()[0]:this.highLightElement;//判断以highLightElement还是annotationElement为参考点
+            return (temp.node.getBoundingClientRect() as DOMRect).top + this.textElement.node.clientHeight / 2;
         }
 
         get width() {
             return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
+        }
+
+        get outterWidth(){
+            return this.width;
         }
 
         get highlightElementBox() {
@@ -52,10 +58,10 @@ export namespace LabelView {
             const firstCharX = parent.xCoordinateOfChar[startIndexInLine];
             const endCharX = parent.xCoordinateOfChar[endIndexInLine];
             return {
-                x: firstCharX,
+                x: firstCharX+0.5,
                 y: parent.y,
-                width: endCharX - firstCharX,
-                height: 20
+                width: endCharX - firstCharX-2,
+                height: 22
             }
         }
 
@@ -118,7 +124,8 @@ export namespace LabelView {
 
         preRender() {
             this.svgElement = this.context.svgElement.group();
-            this.annotationElement = this.svgElement.group().back();
+            this.svgElement.addClass("label-view");
+            this.annotationElement = this.svgElement.group();
             if(this.store.root.config.showLabelOnTop){
                 this.textElement = this.annotationElement.text(this.category.text).font({size: TEXT_SIZE});
             }else{
@@ -150,11 +157,15 @@ export namespace LabelView {
 
         private renderHighlight() {
             let box = this.highlightElementBox;
-            this.highLightElement = this.svgElement.rect(box.width, box.height);
+            this.highLightElement = this.svgElement.rect(box.width, box.height).radius(3, 3);
             this.highLightElement.fill({
                 color: this.category.color,
-                opacity: 0.5
+                opacity: 0.3
             }).dx(box.x);
+            this.highLightElement.attr({
+                title:this.store.category.text,
+                "data-toggle":"tooltip"
+            })
             if(this.store.attributes.isEq!=undefined && !this.store.attributes.isEq){
                 this.highLightElement.addClass('notEq-highLight');
             }

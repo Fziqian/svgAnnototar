@@ -17733,7 +17733,12 @@ var ConnectionView;
         }
         Object.defineProperty(Entity.prototype, "x", {
             get: function () {
-                return (this.from.annotationElementBox.container.x + this.to.annotationElementBox.container.x + this.to.annotationElementBox.container.width - this.width) / 2;
+                // return (this.from.annotationElementBox.container.x + 
+                //     this.to.annotationElementBox.container.x + 
+                //     this.to.annotationElementBox.container.width - this.width) / 2;
+                return (this.leftLabel.annotationElementBox.container.x +
+                    this.rightLabel.annotationElementBox.container.x +
+                    this.rightLabel.annotationElementBox.container.width - this.width) / 2;
             },
             enumerable: true,
             configurable: true
@@ -17782,10 +17787,42 @@ var ConnectionView;
         });
         Entity.prototype.initPosition = function () {
             this.width = this.textElement.bbox().width;
+            // this.width=this.posterior.x+this.posterior.width-this.prior.x+20;
         };
+        Object.defineProperty(Entity.prototype, "outterWidth", {
+            get: function () {
+                return this.rightLabel.x + this.rightLabel.width - this.leftLabel.x + 20;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Entity.prototype, "leftLabel", {
+            get: function () {
+                if (this.from.x < this.to.x) {
+                    return this.from;
+                }
+                else {
+                    return this.to;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Entity.prototype, "rightLabel", {
+            get: function () {
+                if (this.from.x < this.to.x) {
+                    return this.to;
+                }
+                else {
+                    return this.from;
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Entity.prototype.preRender = function () {
             var _this = this;
-            this.svgElement = this.context.svgElement.group();
+            this.svgElement = this.context.svgElement.group().back();
             this.textElement = this.svgElement.text(this.category.text).font({ size: 12 });
             this.textElement.style({
                 '-webkit-user-select': 'none',
@@ -17858,7 +17895,7 @@ var ConnectionView;
             var context = null;
             if (this.inline) {
                 fromY = this.from.y - 5;
-                thisY = this.y + 20.8 - 11;
+                thisY = this.y + 23.8 - 11;
                 toY = this.to.y - 5;
                 context = this.context.svgElement;
             }
@@ -17880,15 +17917,25 @@ var ConnectionView;
             this.lineElement.back();
             this.lineElement.on('mouseover', function () {
                 _this.lineElement.stroke({ width: 1.5, color: 'red' });
+                // 链接线hover时，相关联的label边框加粗加红
+                _this.from.highLightElement.addClass('conectionHover');
+                _this.to.highLightElement.addClass('conectionHover');
             });
             this.svgElement.on('mouseover', function () {
                 _this.lineElement.stroke({ width: 1.5, color: 'red' });
+                // 链接线hover时，相关联的label边框加粗加红
+                _this.from.highLightElement.addClass('conectionHover');
+                _this.to.highLightElement.addClass('conectionHover');
             });
             this.lineElement.on('mouseout', function () {
                 _this.lineElement.stroke({ width: 1, color: 'black' });
+                _this.from.highLightElement.removeClass('conectionHover');
+                _this.to.highLightElement.removeClass('conectionHover');
             });
             this.svgElement.on('mouseout', function () {
                 _this.lineElement.stroke({ width: 1, color: 'black' });
+                _this.from.highLightElement.removeClass('conectionHover');
+                _this.to.highLightElement.removeClass('conectionHover');
             });
             if (this.positionChangedSubscription !== null) {
                 this.positionChangedSubscription.unsubscribe();
@@ -17970,7 +18017,8 @@ var LabelView;
             get: function () {
                 //return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).x + this.annotationElementBox.container.width / 2;
                 // 获取left属性，避免部分浏览器中没有x属性
-                return this.annotationElement.children()[0].node.getBoundingClientRect().left + this.annotationElementBox.container.width / 2;
+                var temp = this.store.root.config.showLabelOnTop ? this.annotationElement.children()[0] : this.highLightElement; //判断以highLightElement还是annotationElement为参考点
+                return temp.node.getBoundingClientRect().left + this.annotationElementBox.container.width / 2;
             },
             enumerable: true,
             configurable: true
@@ -17979,7 +18027,8 @@ var LabelView;
             get: function () {
                 //return (this.annotationElement.children()[0].node.getBoundingClientRect() as DOMRect).y + this.textElement.node.clientHeight / 2;
                 // 获取top属性，避免部分浏览器中没有y属性
-                return this.annotationElement.children()[0].node.getBoundingClientRect().top + this.textElement.node.clientHeight / 2;
+                var temp = this.store.root.config.showLabelOnTop ? this.annotationElement.children()[0] : this.highLightElement; //判断以highLightElement还是annotationElement为参考点
+                return temp.node.getBoundingClientRect().top + this.textElement.node.clientHeight / 2;
             },
             enumerable: true,
             configurable: true
@@ -17987,6 +18036,13 @@ var LabelView;
         Object.defineProperty(Entity.prototype, "width", {
             get: function () {
                 return Math.max(this.highlightElementBox.width, this.annotationElementBox.container.width);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Entity.prototype, "outterWidth", {
+            get: function () {
+                return this.width;
             },
             enumerable: true,
             configurable: true
@@ -17999,10 +18055,10 @@ var LabelView;
                 var firstCharX = parent.xCoordinateOfChar[startIndexInLine];
                 var endCharX = parent.xCoordinateOfChar[endIndexInLine];
                 return {
-                    x: firstCharX,
+                    x: firstCharX + 0.5,
                     y: parent.y,
-                    width: endCharX - firstCharX,
-                    height: 20
+                    width: endCharX - firstCharX - 2,
+                    height: 22
                 };
             },
             enumerable: true,
@@ -18071,7 +18127,8 @@ var LabelView;
         };
         Entity.prototype.preRender = function () {
             this.svgElement = this.context.svgElement.group();
-            this.annotationElement = this.svgElement.group().back();
+            this.svgElement.addClass("label-view");
+            this.annotationElement = this.svgElement.group();
             if (this.store.root.config.showLabelOnTop) {
                 this.textElement = this.annotationElement.text(this.category.text).font({ size: TEXT_SIZE });
             }
@@ -18102,11 +18159,15 @@ var LabelView;
         Entity.prototype.renderHighlight = function () {
             var _this = this;
             var box = this.highlightElementBox;
-            this.highLightElement = this.svgElement.rect(box.width, box.height);
+            this.highLightElement = this.svgElement.rect(box.width, box.height).radius(3, 3);
             this.highLightElement.fill({
                 color: this.category.color,
-                opacity: 0.5
+                opacity: 0.3
             }).dx(box.x);
+            this.highLightElement.attr({
+                title: this.store.category.text,
+                "data-toggle": "tooltip"
+            });
             if (this.store.attributes.isEq != undefined && !this.store.attributes.isEq) {
                 this.highLightElement.addClass('notEq-highLight');
             }
@@ -18310,7 +18371,7 @@ var LineView;
             configurable: true
         });
         Entity.prototype.remove = function () {
-            var dy = -this.topContext.height - 20.8;
+            var dy = -this.topContext.height - 23.8;
             this.topContext.remove();
             this.svgElement.node.remove();
             this.layoutAfterSelf(dy);
@@ -18327,7 +18388,7 @@ var LineView;
             this.topContext.render();
         };
         Entity.prototype.layout = function (dy) {
-            if (dy === void 0) { dy = this.topContext.height + 20.8; }
+            if (dy === void 0) { dy = this.topContext.height + 23.8; }
             // line itself's layout will be handled by svg.js itself
             this.svgElement.dy(dy);
             if (this.isLast) {
@@ -18466,6 +18527,7 @@ var TopContext = /** @class */ (function () {
         this.eventEmitter = new events_1.EventEmitter();
         this._y = null;
         this.elements = new Set();
+        // -----------------订阅行上部区域位置发生改变------------------
         this.positionChanged$ = rxjs_1.fromEvent(this.eventEmitter, 'positionChanged');
         try {
             for (var _c = __values(this.attachTo.store.labelsInThisLine), _d = _c.next(); !_d.done; _d = _c.next()) {
@@ -18564,10 +18626,11 @@ var TopContext = /** @class */ (function () {
                 finally { if (e_4) throw e_4.error; }
             }
             if (_this.height !== originHeight) {
-                // this.attachTo.layout(); //当前行文本重新布局
-                // this.layout(this.height - originHeight);//当前行的上部区域重新布局
+                _this.attachTo.layout(); //当前行文本重新布局
+                _this.layout(_this.height - originHeight); //当前行的上部区域重新布局
                 // //当前行的上部区域重新布局后重新绘制
-                _this.attachTo.Test();
+                // this.attachTo.Test();
+                _this.attachTo.rerender();
                 _this.attachTo.layoutAfterSelf(_this.height - originHeight);
             }
         });
@@ -18646,7 +18709,7 @@ var TopContext = /** @class */ (function () {
                 this.y = this.attachTo.svgElement.node.getExtentOfChar(0).y;
             }
             else {
-                this.y = this.attachTo.prev.topContext.y + 20.8 + this.height;
+                this.y = this.attachTo.prev.topContext.y + 23.8 + this.height;
             }
         }
         else {
@@ -18657,7 +18720,7 @@ var TopContext = /** @class */ (function () {
         this.elements.forEach(function (it) { return it.render(); });
     };
     TopContext.prototype.preRender = function (context) {
-        this.svgElement = context.group().back();
+        this.svgElement = context.group();
         this.elements.forEach(function (it) { return it.preRender(); });
     };
     TopContext.prototype.initPosition = function () {
@@ -18701,8 +18764,11 @@ var TopContext = /** @class */ (function () {
         element.render();
         element.postRender();
         if (originHeight !== this.height) {
+            // 当前行重新布局
             this.attachTo.layout();
+            // 当前行 的上部区域 重新布局
             this.layout(this.height - originHeight);
+            // 当前行后面的所有行 的上部区域 重新布局
             this.attachTo.layoutAfterSelf(this.height - originHeight);
         }
     };
@@ -18732,7 +18798,7 @@ var TopContextUser = /** @class */ (function () {
     Object.defineProperty(TopContextUser.prototype, "y", {
         // 左下角在render context中的坐标
         get: function () {
-            return -(this.layer - 1) * 30 - 20.8;
+            return -(this.layer - 1) * 30 - 23.8;
         },
         enumerable: true,
         configurable: true
@@ -18760,13 +18826,13 @@ var TopContextUser = /** @class */ (function () {
                 finally { if (e_1) throw e_1.error; }
             }
             var thisLeftX = this.x;
-            var width = this.width;
+            var width = this.outterWidth;
             try {
                 for (var allElementsInThisLayer_1 = __values(allElementsInThisLayer), allElementsInThisLayer_1_1 = allElementsInThisLayer_1.next(); !allElementsInThisLayer_1_1.done; allElementsInThisLayer_1_1 = allElementsInThisLayer_1.next()) {
                     var other = allElementsInThisLayer_1_1.value;
                     var thisRightX = thisLeftX + width;
                     var otherLeftX = other.x;
-                    var otherWidth = other.width;
+                    var otherWidth = other.outterWidth;
                     var otherRightX = otherLeftX + otherWidth;
                     //判断是否有重叠
                     var max = [thisLeftX, otherLeftX];
@@ -18935,9 +19001,9 @@ var TwoLabelsClickedHandler = /** @class */ (function () {
                 _this.markerElement.remove();
                 _this.svgElement.remove();
                 var fromLabelView = _this.root.view.labelViewRepo.get(_this.lastSelection);
-                var fromX = fromLabelView.globalX - _this.root.view.svgDoc.node.getBoundingClientRect().left - 20;
+                var fromX = fromLabelView.globalX - _this.root.view.svgDoc.node.getBoundingClientRect().left - 30;
                 var fromY = fromLabelView.globalY - _this.root.view.svgDoc.node.getBoundingClientRect().top;
-                var toX = e.clientX - _this.root.view.svgDoc.node.getBoundingClientRect().left - 20;
+                var toX = e.clientX - _this.root.view.svgDoc.node.getBoundingClientRect().left - 30;
                 var toY = e.clientY - _this.root.view.svgDoc.node.getBoundingClientRect().top;
                 var dx = (fromX - toX) / 4;
                 var y2 = Math.min(fromY, toY) - 20;

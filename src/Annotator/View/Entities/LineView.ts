@@ -53,7 +53,7 @@ export namespace LineView {
         }
 
         remove() {
-            let dy = -this.topContext.height - 20.8;
+            let dy = -this.topContext.height - 23.8;
             this.topContext.remove();
             this.svgElement.node.remove();
             this.layoutAfterSelf(dy);
@@ -71,7 +71,7 @@ export namespace LineView {
             this.topContext.render();
         }
 
-        layout(dy: number = this.topContext.height + 20.8) {
+        layout(dy: number = this.topContext.height + 23.8) {
             // line itself's layout will be handled by svg.js itself
             this.svgElement.dy(dy);
             if (this.isLast) {
@@ -119,7 +119,7 @@ export namespace LineView {
             this.topContext.postRender();
         }
 
-        private rerender() {
+        public rerender() {
             const oldHeight = this.topContext.height;
             this.topContext.remove();
             this.svgElement.clear();

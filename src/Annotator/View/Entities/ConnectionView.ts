@@ -28,7 +28,12 @@ export namespace ConnectionView {
         }
 
         get x(): number {
-            return (this.from.annotationElementBox.container.x + this.to.annotationElementBox.container.x + this.to.annotationElementBox.container.width - this.width) / 2;
+            // return (this.from.annotationElementBox.container.x + 
+            //     this.to.annotationElementBox.container.x + 
+            //     this.to.annotationElementBox.container.width - this.width) / 2;
+            return (this.leftLabel.annotationElementBox.container.x + 
+                this.rightLabel.annotationElementBox.container.x + 
+                this.rightLabel.annotationElementBox.container.width - this.width) / 2;
         }
 
         get from() {
@@ -57,10 +62,30 @@ export namespace ConnectionView {
 
         initPosition() {
             this.width = this.textElement.bbox().width;
+            // this.width=this.posterior.x+this.posterior.width-this.prior.x+20;
+        }
+        get outterWidth(){
+            return this.rightLabel.x+this.rightLabel.width-this.leftLabel.x+20;
+        }
+
+        get leftLabel(){
+            if(this.from.x<this.to.x){
+                return this.from;
+            }else{
+                return this.to;
+            }
+        }
+
+        get rightLabel(){
+            if(this.from.x<this.to.x){
+                return this.to;
+            }else{
+                return this.from;
+            }
         }
 
         preRender() {
-            this.svgElement = this.context.svgElement.group();
+            this.svgElement = this.context.svgElement.group().back();
             this.textElement = this.svgElement.text(this.category.text).font({size: 12});
             this.textElement.style({
                 '-webkit-user-select': 'none',
@@ -108,7 +133,6 @@ export namespace ConnectionView {
             }
             super.eliminateOverlapping();
         }
-
         postRender() {
             if (this.lineElement !== null) {
                 this.lineElement.remove();
@@ -137,7 +161,7 @@ export namespace ConnectionView {
             let context: SVG.Container = null;
             if (this.inline) {
                 fromY = this.from.y - 5;
-                thisY = this.y + 20.8 - 11;
+                thisY = this.y + 23.8 - 11;
                 toY = this.to.y - 5;
                 context = this.context.svgElement;
             } else {
@@ -181,15 +205,25 @@ export namespace ConnectionView {
             this.lineElement.back();
             this.lineElement.on('mouseover', () => {
                 this.lineElement.stroke({width: 1.5, color: 'red'});
+                // 链接线hover时，相关联的label边框加粗加红
+                this.from.highLightElement.addClass('conectionHover');
+                this.to.highLightElement.addClass('conectionHover');
             });
             this.svgElement.on('mouseover', () => {
                 this.lineElement.stroke({width: 1.5, color: 'red'});
+                // 链接线hover时，相关联的label边框加粗加红
+                this.from.highLightElement.addClass('conectionHover');
+                this.to.highLightElement.addClass('conectionHover');
             });
             this.lineElement.on('mouseout', () => {
                 this.lineElement.stroke({width: 1, color: 'black'});
+                this.from.highLightElement.removeClass('conectionHover');
+                this.to.highLightElement.removeClass('conectionHover');
             });
             this.svgElement.on('mouseout', () => {
                 this.lineElement.stroke({width: 1, color: 'black'});
+                this.from.highLightElement.removeClass('conectionHover');
+                this.to.highLightElement.removeClass('conectionHover');
             });
             if (this.positionChangedSubscription !== null) {
                 this.positionChangedSubscription.unsubscribe();
