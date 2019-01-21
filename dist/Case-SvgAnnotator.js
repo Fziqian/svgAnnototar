@@ -18825,14 +18825,30 @@ var TopContextUser = /** @class */ (function () {
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            var thisLeftX = this.x;
-            var width = this.outterWidth;
+            var thisLeftX;
+            var width;
+            if (this.outterWidth > this.width) {
+                thisLeftX = this.x;
+                width = this.outterWidth;
+            }
+            else {
+                thisLeftX = this.x - this.width / 2 + this.outterWidth / 2;
+                width = this.width;
+            }
             try {
                 for (var allElementsInThisLayer_1 = __values(allElementsInThisLayer), allElementsInThisLayer_1_1 = allElementsInThisLayer_1.next(); !allElementsInThisLayer_1_1.done; allElementsInThisLayer_1_1 = allElementsInThisLayer_1.next()) {
                     var other = allElementsInThisLayer_1_1.value;
                     var thisRightX = thisLeftX + width;
-                    var otherLeftX = other.x;
-                    var otherWidth = other.outterWidth;
+                    var otherLeftX = void 0;
+                    var otherWidth = void 0;
+                    if (other.outterWidth > other.width) {
+                        otherLeftX = other.x;
+                        otherWidth = other.outterWidth;
+                    }
+                    else {
+                        otherLeftX = other.x - other.width / 2 + other.outterWidth / 2;
+                        otherWidth = other.width;
+                    }
                     var otherRightX = otherLeftX + otherWidth;
                     //判断是否有重叠
                     var max = [thisLeftX, otherLeftX];

@@ -35,12 +35,27 @@ export abstract class TopContextUser {
                 allElementsInThisLayer.add(ele);
             }
         }
-        let thisLeftX = this.x;
-        let width = this.outterWidth;
+        let thisLeftX:number;
+        let width:number;
+        if(this.outterWidth>this.width){
+            thisLeftX = this.x;
+            width = this.outterWidth;
+        }else{
+            thisLeftX = this.x-this.width/2+this.outterWidth/2;
+            width = this.width;
+        }
+      
         for (let other of allElementsInThisLayer) {
             let thisRightX = thisLeftX + width;
-            let otherLeftX = other.x;
-            let otherWidth = other.outterWidth;
+            let otherLeftX:number;
+            let otherWidth:number;
+            if(other.outterWidth>other.width){
+                otherLeftX = other.x;
+                otherWidth = other.outterWidth;
+            }else{
+                otherLeftX = other.x-other.width/2+other.outterWidth/2;
+                otherWidth = other.width;
+            }
             let otherRightX = otherLeftX + otherWidth;
 
             //判断是否有重叠
