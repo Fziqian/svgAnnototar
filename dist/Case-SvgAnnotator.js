@@ -18287,6 +18287,10 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 var Repository_1 = require("../../Infrastructure/Repository");
 var TopContext_1 = require("./TopContext");
@@ -18381,7 +18385,84 @@ var LineView;
             this.svgElement = context.tspan(this.store.text).newLine();
             this.svgElement.AnnotatorElement = this;
             this.svgElement.on('mouseup', function () {
-                _this.root.root.textSelectionHandler.textSelected();
+                _this.root.root.textSelectionHandler.textSelected(_this.root.selection);
+                _this.root.textSelectBackground.innerHTML = "";
+            });
+            this.svgElement.on('mousemove', function (e) {
+                if (e.which == 1) {
+                    if (window.getSelection) {
+                        _this.root.selection = window.getSelection();
+                        var selection = _this.root.selection;
+                        var BGCOLOR = '#4aa2ff'; // 选中文字的背景色
+                        var BGHEIGHT = '18px'; // 选中文字的高度
+                        var startElement = null;
+                        var endElement = null;
+                        try {
+                            startElement = selection.anchorNode.parentNode;
+                            endElement = selection.focusNode.parentNode;
+                        }
+                        catch (e) {
+                            return null;
+                        }
+                        var startLineView = void 0;
+                        var endLineView = void 0;
+                        var startIndex = void 0;
+                        var endIndex = void 0;
+                        var anchorPos = void 0; //鼠标选中的起点
+                        var focusPos = void 0; //鼠标选中的终点
+                        try {
+                            startLineView = startElement.instance.AnnotatorElement;
+                            endLineView = endElement.instance.AnnotatorElement;
+                            // if (startLineView.root.root !== this.root || endLineView.root.root !== this.root) {
+                            //     return null;
+                            // }
+                            var getdyTotal = function (element) {
+                                var dyTotal = 0;
+                                for (var i = 0; i < __spread(element.parentNode.children).length; i++) {
+                                    var child = __spread(element.parentNode.children)[i];
+                                    if (i > 0) {
+                                        dyTotal += Number(child.getAttribute('dy'));
+                                    }
+                                    if (child.id == element.id) {
+                                        return dyTotal;
+                                    }
+                                }
+                                return dyTotal;
+                            };
+                            anchorPos = {
+                                x: startLineView.xCoordinateOfChar[selection.anchorOffset] + 30,
+                                endCharX: startLineView.xCoordinateOfChar[startLineView.xCoordinateOfChar.length - 1] + 30,
+                                y: startElement.getBBox().y + getdyTotal(startElement) + 2
+                            };
+                            focusPos = {
+                                x: endLineView.xCoordinateOfChar[selection.focusOffset] + 30,
+                                endCharX: endLineView.xCoordinateOfChar[endLineView.xCoordinateOfChar.length - 1] + 30,
+                                y: endElement.getBBox().y + getdyTotal(endElement) + 2
+                            };
+                            // startIndex = startLineView.store.startIndex + selection.anchorOffset;
+                            // endIndex = endLineView.store.startIndex + selection.focusOffset;
+                        }
+                        catch (e) {
+                            return null;
+                        }
+                        if (focusPos.x != _this.root.lastPos.x || focusPos.y != _this.root.lastPos.y) {
+                            _this.root.lastPos = focusPos;
+                            if (focusPos.y == anchorPos.y) { //鼠标选中的文字没有跨行
+                                _this.root.textSelectBackground.innerHTML = "\n                                    <div style=\"position:absolute;\n                                                top:" + anchorPos.y + "px;\n                                                left:" + Math.min(focusPos.x, anchorPos.x) + "px;\n                                                width:" + Math.abs(focusPos.x - anchorPos.x) + "px;\n                                                height:" + BGHEIGHT + ";\n                                                background:" + BGCOLOR + "\">\n                                    </div>";
+                            }
+                            else if (focusPos.y > anchorPos.y) { // 鼠标从上往下滑动选中跨行文字
+                                var tempHtml = "\n                                    <div style=\"position:absolute;\n                                                top:" + anchorPos.y + "px;\n                                                left:" + anchorPos.x + "px;\n                                                width:" + Math.abs(anchorPos.endCharX - anchorPos.x) + "px;\n                                                height:" + BGHEIGHT + ";\n                                                background:" + BGCOLOR + "\">\n                                    </div>";
+                                tempHtml += "\n                                    <div style=\"position:absolute;\n                                                top:" + focusPos.y + "px;\n                                                left:30px;\n                                                width:" + Math.abs(focusPos.x - 30) + "px;\n                                                height:" + BGHEIGHT + ";\n                                                background:" + BGCOLOR + "\">\n                                    </div>";
+                                _this.root.textSelectBackground.innerHTML = tempHtml;
+                            }
+                            else { // 鼠标从下往上滑动选中跨行文字
+                                var tempHtml = "\n                                    <div style=\"position:absolute;\n                                                top:" + anchorPos.y + "px;\n                                                left:30px;\n                                                width:" + Math.abs(anchorPos.x - 30) + "px;\n                                                height:" + BGHEIGHT + ";\n                                                background:" + BGCOLOR + "\">\n                                    </div>";
+                                tempHtml += "\n                                    <div style=\"position:absolute;\n                                                top:" + focusPos.y + "px;\n                                                left:" + focusPos.x + "px;\n                                                width:" + Math.abs(focusPos.endCharX - focusPos.x) + "px;\n                                                height:" + BGHEIGHT + ";\n                                                background:" + BGCOLOR + "\">\n                                    </div>";
+                                _this.root.textSelectBackground.innerHTML = tempHtml;
+                            }
+                        }
+                    }
+                }
             });
         };
         Entity.prototype.renderTopContext = function () {
@@ -18657,7 +18738,7 @@ var TopContext = /** @class */ (function () {
                 for (var _d = __values(this.elements), _e = _d.next(); !_e.done; _e = _d.next()) {
                     var element = _e.value;
                     // 如果是配置了不显示label的情况下，在计算是否重叠时将忽略label层，因为他直接标记覆盖在原文本内容上
-                    if (element instanceof LabelView_1.LabelView.Entity /* && element.store.root.config.showLabelOnTop */)
+                    if (element instanceof LabelView_1.LabelView.Entity && element.store.root.config.showLabelOnTop)
                         element.eliminateOverlapping();
                 }
             }
@@ -18684,6 +18765,7 @@ var TopContext = /** @class */ (function () {
             }
             var maxLayer = 0;
             try {
+                // console.log(this.elements);
                 for (var _h = __values(this.elements), _j = _h.next(); !_j.done; _j = _h.next()) {
                     var it_1 = _j.value;
                     if (it_1.layer > maxLayer) {
@@ -18905,9 +18987,9 @@ var TextSelectionHandler = /** @class */ (function () {
         this.root = root;
         this.selectLengthLimit = 80;
     }
-    TextSelectionHandler.prototype.getSelectionInfo = function () {
+    TextSelectionHandler.prototype.getSelectionInfo = function (selection) {
         var _a;
-        var selection = window.getSelection();
+        // const selection = window.getSelection();
         var startElement = null;
         var endElement = null;
         try {
@@ -18971,10 +19053,12 @@ var TextSelectionHandler = /** @class */ (function () {
             endIndex: endIndex
         };
     };
-    TextSelectionHandler.prototype.textSelected = function () {
-        var selectionInfo = this.getSelectionInfo();
-        if (selectionInfo) {
-            this.root.emit('textSelected', selectionInfo.startIndex, selectionInfo.endIndex);
+    TextSelectionHandler.prototype.textSelected = function (selection) {
+        if (selection) {
+            var selectionInfo = this.getSelectionInfo(selection);
+            if (selectionInfo) {
+                this.root.emit('textSelected', selectionInfo.startIndex, selectionInfo.endIndex);
+            }
         }
         window.getSelection().removeAllRanges();
     };
@@ -19079,13 +19163,18 @@ var View = /** @class */ (function () {
     function View(htmlElement, root) {
         var _this = this;
         this.root = root;
+        this.lastPos = { x: 0, y: 0, endCharX: 0 };
         this.svgDoc = SVG(htmlElement);
         this.svgDoc.width(1024).height(768);
         this.svgDoc.view = this;
-        this.svgDoc.style({ 'padding-left': '30px', 'padding-right': '0px' });
+        this.svgDoc.style({ 'padding-left': '30px', 'padding-right': '0px', 'position': 'relative', 'z-index': 2 });
         this.lineViewRepo = new LineView_1.LineView.Repository(this);
         this.labelViewRepo = new LabelView_1.LabelView.Repository(this);
         this.connectionViewRepo = new ConnectionView_1.ConnectionView.Repository(this);
+        this.textSelectBackground = document.createElement("div");
+        this.textSelectBackground.style.cssText = "position:absolute;top:0;left:0";
+        htmlElement.style.position = "relative";
+        htmlElement.appendChild(this.textSelectBackground);
         this.store.ready$.subscribe(function () {
             _this.construct();
             _this.render();
@@ -19113,6 +19202,8 @@ var View = /** @class */ (function () {
         style.type = 'text/css';
         style.appendChild(document.createTextNode('svg .label-view:hover rect {transition: all 0.15s;stroke: red;stroke-width:2;}'));
         style.appendChild(document.createTextNode('svg .connection-view:hover text {transition: all 0.15s;fill:#006699;cursor:pointer;text-decoration:underline;color:blue;}'));
+        style.appendChild(document.createTextNode('svg text tspan::selection{background:rgba(0,0,0,0);}'));
+        style.appendChild(document.createTextNode('svg text tspan::-moz-selection{background:rgba(0,0,0,0);}'));
         head.appendChild(style);
         var svgText = this.svgDoc.text('');
         svgText.clear();
@@ -19223,15 +19314,9 @@ var View = /** @class */ (function () {
             finally { if (e_8) throw e_8.error; }
         }
         this.resize();
-        this.svgDoc.on('mouseup', function () {
-            _this.root.textSelectionHandler.textSelected();
-        });
-        this.svgDoc.on('mouseover', function (e) {
-            if (e.which === 1) {
-                if (window.getSelection) {
-                    window.console.log("高亮");
-                }
-            }
+        this.svgDoc.on('mouseup', function (e) {
+            _this.root.textSelectionHandler.textSelected(_this.selection);
+            _this.textSelectBackground.innerHTML = "";
         });
     };
     View.prototype.rerendered = function (id) {

@@ -10,15 +10,22 @@ export class View implements RepositoryRoot {
     readonly lineViewRepo: LineView.Repository;
     readonly labelViewRepo: LabelView.Repository;
     readonly connectionViewRepo: ConnectionView.Repository;
+    public selection: any;
+    public textSelectBackground: HTMLElement;
+    public lastPos:{x:number,y:number,endCharX:number}={x:0,y:0,endCharX:0};
 
     constructor(htmlElement: HTMLElement, public readonly root: Annotator) {
         this.svgDoc = SVG(htmlElement);
         this.svgDoc.width(1024).height(768);
         (this.svgDoc as any).view = this;
-        this.svgDoc.style({'padding-left': '30px', 'padding-right': '0px'});
+        this.svgDoc.style({'padding-left': '30px', 'padding-right': '0px', 'position': 'relative', 'z-index': 2});
         this.lineViewRepo = new LineView.Repository(this);
         this.labelViewRepo = new LabelView.Repository(this);
         this.connectionViewRepo = new ConnectionView.Repository(this);
+        this.textSelectBackground = document.createElement("div");
+        this.textSelectBackground.style.cssText="position:absolute;top:0;left:0";
+        htmlElement.style.position="relative";
+        htmlElement.appendChild(this.textSelectBackground);
         this.store.ready$.subscribe(() => {
             this.construct();
             this.render();
@@ -43,6 +50,8 @@ export class View implements RepositoryRoot {
         style.type = 'text/css';
         style.appendChild(document.createTextNode('svg .label-view:hover rect {transition: all 0.15s;stroke: red;stroke-width:2;}'));
         style.appendChild(document.createTextNode('svg .connection-view:hover text {transition: all 0.15s;fill:#006699;cursor:pointer;text-decoration:underline;color:blue;}'));
+        style.appendChild(document.createTextNode('svg text tspan::selection{background:rgba(0,0,0,0);}'));
+        style.appendChild(document.createTextNode('svg text tspan::-moz-selection{background:rgba(0,0,0,0);}'));
         head.appendChild(style);
         let svgText = this.svgDoc.text('');
         svgText.clear();
@@ -73,17 +82,9 @@ export class View implements RepositoryRoot {
             entity.topContext.postRender();
         }
         this.resize();
-        this.svgDoc.on('mouseup', ()=>{
-
-            this.root.textSelectionHandler.textSelected();
-        });
-        this.svgDoc.on('mouseover', (e)=>{
-     
-            if(e.which === 1){
-                if(window.getSelection){
-                    window.console.log("高亮")
-                }
-            }
+        this.svgDoc.on('mouseup', (e)=>{
+            this.root.textSelectionHandler.textSelected(this.selection);
+            this.textSelectBackground.innerHTML="";
         });
     }
 

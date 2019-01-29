@@ -63,7 +63,115 @@ export namespace LineView {
             this.svgElement = context.tspan(this.store.text).newLine();
             (this.svgElement as any).AnnotatorElement = this;
             this.svgElement.on('mouseup', () => {
-                this.root.root.textSelectionHandler.textSelected();
+                this.root.root.textSelectionHandler.textSelected(this.root.selection);
+                this.root.textSelectBackground.innerHTML="";
+            });
+            this.svgElement.on('mousemove', (e)=>{
+                if(e.which==1){
+                    if(window.getSelection){
+                        this.root.selection =window.getSelection();
+                        let selection=this.root.selection;
+                        const BGCOLOR='#4aa2ff'; // 选中文字的背景色
+                        const BGHEIGHT='18px'; // 选中文字的高度
+                        let startElement = null;
+                        let endElement = null;
+                        try {
+                            startElement = selection.anchorNode.parentNode;
+                            endElement = selection.focusNode.parentNode;
+                        } catch (e) {
+                            return null;
+                        }
+                        let startLineView: LineView.Entity;
+                        let endLineView: LineView.Entity;
+                        let startIndex: number;
+                        let endIndex: number;
+                        let anchorPos:{x:number,y:number,endCharX:number};//鼠标选中的起点
+                        let focusPos:{x:number,y:number,endCharX:number};//鼠标选中的终点
+                        try {
+                            startLineView = (startElement as any).instance.AnnotatorElement as LineView.Entity;
+                            endLineView = (endElement as any).instance.AnnotatorElement as LineView.Entity;
+                            // if (startLineView.root.root !== this.root || endLineView.root.root !== this.root) {
+                            //     return null;
+                            // }
+                            let getdyTotal=function(element:any){
+                                let dyTotal=0;
+                                for(let i=0;i<[...element.parentNode.children].length;i++){
+                                    let child=[...element.parentNode.children][i];
+                                    if(i>0){
+                                        dyTotal+=Number(child.getAttribute('dy'));
+                                    }
+                                    if(child.id==element.id){
+                                        return dyTotal;
+                                    }
+                                }
+                                return dyTotal;
+                            }
+                            anchorPos={
+                                x:startLineView.xCoordinateOfChar[selection.anchorOffset]+30,//30是svg的左边距
+                                endCharX:startLineView.xCoordinateOfChar[startLineView.xCoordinateOfChar.length-1]+30, //结尾字符的x坐标
+                                y:startElement.getBBox().y+getdyTotal(startElement)+2
+                            };
+                            focusPos={
+                                x:endLineView.xCoordinateOfChar[selection.focusOffset]+30,
+                                endCharX:endLineView.xCoordinateOfChar[endLineView.xCoordinateOfChar.length-1]+30,
+                                y:endElement.getBBox().y+getdyTotal(endElement)+2
+                            };
+                            // startIndex = startLineView.store.startIndex + selection.anchorOffset;
+                            // endIndex = endLineView.store.startIndex + selection.focusOffset;
+                        } catch (e) {
+                            return null;
+                        }
+                        if(focusPos.x!=this.root.lastPos.x||focusPos.y!=this.root.lastPos.y){
+                             this.root.lastPos=focusPos;
+                             if(focusPos.y==anchorPos.y){ //鼠标选中的文字没有跨行
+                                this.root.textSelectBackground.innerHTML=`
+                                    <div style="position:absolute;
+                                                top:${anchorPos.y}px;
+                                                left:${Math.min(focusPos.x,anchorPos.x)}px;
+                                                width:${Math.abs(focusPos.x-anchorPos.x)}px;
+                                                height:${BGHEIGHT};
+                                                background:${BGCOLOR}">
+                                    </div>`;
+                             }else if(focusPos.y>anchorPos.y){ // 鼠标从上往下滑动选中跨行文字
+                                let tempHtml=`
+                                    <div style="position:absolute;
+                                                top:${anchorPos.y}px;
+                                                left:${anchorPos.x}px;
+                                                width:${Math.abs(anchorPos.endCharX-anchorPos.x)}px;
+                                                height:${BGHEIGHT};
+                                                background:${BGCOLOR}">
+                                    </div>`;
+                                    tempHtml+=`
+                                    <div style="position:absolute;
+                                                top:${focusPos.y}px;
+                                                left:30px;
+                                                width:${Math.abs(focusPos.x-30)}px;
+                                                height:${BGHEIGHT};
+                                                background:${BGCOLOR}">
+                                    </div>`;
+                                this.root.textSelectBackground.innerHTML=tempHtml;
+                             }else{ // 鼠标从下往上滑动选中跨行文字
+                                let tempHtml=`
+                                    <div style="position:absolute;
+                                                top:${anchorPos.y}px;
+                                                left:30px;
+                                                width:${Math.abs(anchorPos.x-30)}px;
+                                                height:${BGHEIGHT};
+                                                background:${BGCOLOR}">
+                                    </div>`;
+                                    tempHtml+=`
+                                    <div style="position:absolute;
+                                                top:${focusPos.y}px;
+                                                left:${focusPos.x}px;
+                                                width:${Math.abs(focusPos.endCharX-focusPos.x)}px;
+                                                height:${BGHEIGHT};
+                                                background:${BGCOLOR}">
+                                    </div>`;
+                                this.root.textSelectBackground.innerHTML=tempHtml;
+                             }
+                        }
+                    }
+                }
             });
         }
 

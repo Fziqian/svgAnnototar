@@ -119,7 +119,7 @@ export class TopContext {
     get height() {
         for (let element of this.elements) {
             // 如果是配置了不显示label的情况下，在计算是否重叠时将忽略label层，因为他直接标记覆盖在原文本内容上
-            if (element instanceof LabelView.Entity /* && element.store.root.config.showLabelOnTop */)
+            if (element instanceof LabelView.Entity && element.store.root.config.showLabelOnTop)
                 element.eliminateOverlapping();
         }
         for (let element of this.elements) {
@@ -127,6 +127,7 @@ export class TopContext {
                 element.eliminateOverlapping();
         }
         let maxLayer = 0;
+        // console.log(this.elements);
         for (let it of this.elements) {
             if (it.layer > maxLayer) {
                 maxLayer = it.layer;

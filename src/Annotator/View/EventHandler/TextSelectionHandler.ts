@@ -9,8 +9,8 @@ export class TextSelectionHandler {
 
     }
 
-    getSelectionInfo() {
-        const selection = window.getSelection();
+    getSelectionInfo(selection) {
+        // const selection = window.getSelection();
         let startElement = null;
         let endElement = null;
         try {
@@ -75,11 +75,14 @@ export class TextSelectionHandler {
         }
     }
 
-    textSelected() {
-        let selectionInfo = this.getSelectionInfo();
-        if (selectionInfo) {
-            this.root.emit('textSelected', selectionInfo.startIndex, selectionInfo.endIndex);
+    textSelected(selection:any) {
+        if(selection){
+            let selectionInfo = this.getSelectionInfo(selection);
+            if (selectionInfo) {
+                this.root.emit('textSelected', selectionInfo.startIndex, selectionInfo.endIndex);
+            }
         }
+       
         window.getSelection().removeAllRanges();
     }
 }
