@@ -40,7 +40,7 @@ gulp(gulp watch)
 
 ### Demo
 
-[demo](https://felixhpp.github.io/Case-SvgAnnotator/demo/Index.html)
+[demo](https://Fziqian.github.io/svgAnnototar/demo/Index.html)
 
 ### API
 请查看[API](https://github.com/felixhpp/Case-SvgAnnotator/blob/master/doc/api.md)
